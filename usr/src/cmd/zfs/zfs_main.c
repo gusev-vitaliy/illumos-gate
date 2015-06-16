@@ -225,7 +225,7 @@ get_usage(zfs_help_t idx)
 		    "<filesystem|volume>@<snap>[%<snap>][,...]\n"
 		    "\tdestroy <filesystem|volume>#<bookmark>\n"));
 	case HELP_GET:
-		return (gettext("\tget [-rHp] [-d max] "
+		return (gettext("\tget [-rHpj] [-d max] "
 		    "[-o \"all\" | field[,...]]\n"
 		    "\t    [-t type[,...]] [-s source[,...]]\n"
 		    "\t    <\"all\" | property[,...]> "
@@ -237,7 +237,7 @@ get_usage(zfs_help_t idx)
 		return (gettext("\tupgrade [-v]\n"
 		    "\tupgrade [-r] [-V version] <-a | filesystem ...>\n"));
 	case HELP_LIST:
-		return (gettext("\tlist [-Hp] [-r|-d max] [-o property[,...]] "
+		return (gettext("\tlist [-Hpj] [-r|-d max] [-o property[,...]] "
 		    "[-s property]...\n\t    [-S property]... [-t type[,...]] "
 		    "[filesystem|volume|snapshot] ...\n"));
 	case HELP_MOUNT:
@@ -1463,6 +1463,10 @@ get_callback(zfs_handle_t *zhp, void *data)
 	char *strval;
 	char *sourceval;
 	boolean_t received = is_recvd_column(cbp);
+	nvlist_t *props = NULL;
+
+	if (cbp->cb_json)
+		props = fnvlist_alloc();
 
 	for (; pl != NULL; pl = pl->pl_next) {
 		char *recvdval = NULL;
@@ -1499,7 +1503,7 @@ get_callback(zfs_handle_t *zhp, void *data)
 
 			zprop_print_one_property(zfs_get_name(zhp), cbp,
 			    zfs_prop_to_name(pl->pl_prop),
-			    buf, sourcetype, source, recvdval);
+			    buf, sourcetype, source, recvdval, props);
 		} else if (zfs_prop_userquota(pl->pl_user_prop)) {
 			sourcetype = ZPROP_SRC_LOCAL;
 
@@ -1510,7 +1514,8 @@ get_callback(zfs_handle_t *zhp, void *data)
 			}
 
 			zprop_print_one_property(zfs_get_name(zhp), cbp,
-			    pl->pl_user_prop, buf, sourcetype, source, NULL);
+			    pl->pl_user_prop, buf, sourcetype, source, NULL,
+			    props);
 		} else if (zfs_prop_written(pl->pl_user_prop)) {
 			sourcetype = ZPROP_SRC_LOCAL;
 
@@ -1521,7 +1526,8 @@ get_callback(zfs_handle_t *zhp, void *data)
 			}
 
 			zprop_print_one_property(zfs_get_name(zhp), cbp,
-			    pl->pl_user_prop, buf, sourcetype, source, NULL);
+			    pl->pl_user_prop, buf, sourcetype, source, NULL,
+			    props);
 		} else {
 			if (nvlist_lookup_nvlist(user_props,
 			    pl->pl_user_prop, &propval) != 0) {
@@ -1555,11 +1561,30 @@ get_callback(zfs_handle_t *zhp, void *data)
 
 			zprop_print_one_property(zfs_get_name(zhp), cbp,
 			    pl->pl_user_prop, strval, sourcetype,
-			    source, recvdval);
+			    source, recvdval, props);
 		}
 	}
 
+	if (cbp->cb_json) {
+		(void) fprintf(cbp->cb_json, "%s\"%s\":",
+		    cbp->cb_first ? "" : ",\n  ", zfs_get_name(zhp));
+		cbp->cb_first = B_FALSE;
+		(void) nvlist_print_json(cbp->cb_json, props);
+		nvlist_free(props);
+	}
 	return (0);
+}
+
+static void
+print_json_begin(FILE *fp)
+{
+	(void) fprintf(fp, "{\n  ");
+}
+
+static void
+print_json_end(FILE *fp)
+{
+	(void) fprintf(fp, "\n}\n");
 }
 
 static int
@@ -1584,8 +1609,11 @@ zfs_do_get(int argc, char **argv)
 	cb.cb_type = ZFS_TYPE_DATASET;
 
 	/* check options */
-	while ((c = getopt(argc, argv, ":d:o:s:rt:Hp")) != -1) {
+	while ((c = getopt(argc, argv, ":d:o:s:rt:Hpj")) != -1) {
 		switch (c) {
+		case 'j':
+			cb.cb_json = stdout;
+			break;
 		case 'p':
 			cb.cb_literal = B_TRUE;
 			break;
@@ -1756,6 +1784,9 @@ zfs_do_get(int argc, char **argv)
 
 	fields = argv[0];
 
+	if (cb.cb_json)
+		print_json_begin(cb.cb_json);
+
 	if (zprop_get_list(g_zfs, fields, &cb.cb_proplist, ZFS_TYPE_DATASET)
 	    != 0)
 		usage(B_FALSE);
@@ -1788,6 +1819,9 @@ zfs_do_get(int argc, char **argv)
 		zprop_free_list(fake_name.pl_next);
 	else
 		zprop_free_list(cb.cb_proplist);
+
+	if (cb.cb_json)
+		print_json_end(cb.cb_json);
 
 	return (ret);
 }
@@ -2870,7 +2904,32 @@ typedef struct list_cbdata {
 	boolean_t	cb_literal;
 	boolean_t	cb_scripted;
 	zprop_list_t	*cb_proplist;
+	FILE            *cb_json;          /* output in json */
 } list_cbdata_t;
+
+/* always return valid pointer */
+static const char *
+proplist_name(const zprop_list_t *pl)
+{
+	const char *name;
+
+	if (pl->pl_prop != ZPROP_INVAL)
+		name = zfs_prop_to_name(pl->pl_prop);
+	else
+		name = pl->pl_user_prop;
+
+	return name;
+}
+
+static void
+print_json_array_end(list_cbdata_t *cbp)
+{
+	/* no datasets? */
+	if (cbp->cb_first)
+		(void) fprintf(cbp->cb_json, "[\n  ");
+
+	(void) fprintf(cbp->cb_json, "\n]\n");
+}
 
 /*
  * Given a list of columns to display, output appropriate headers for each one.
@@ -2928,6 +2987,10 @@ print_dataset(zfs_handle_t *zhp, list_cbdata_t *cb)
 	nvlist_t *propval;
 	char *propstr;
 	boolean_t right_justify;
+	nvlist_t *props;	    /* dataset's props */
+
+	if (cb->cb_json)
+		props = fnvlist_alloc();
 
 	for (; pl != NULL; pl = pl->pl_next) {
 		if (!first) {
@@ -2971,6 +3034,11 @@ print_dataset(zfs_handle_t *zhp, list_cbdata_t *cb)
 			right_justify = B_FALSE;
 		}
 
+		if (cb->cb_json) {
+			fnvlist_add_string(props, proplist_name(pl), propstr);
+			continue;
+		}
+
 		/*
 		 * If this is being called in scripted mode, or if this is the
 		 * last column and it is left-justified, don't include a width
@@ -2982,6 +3050,13 @@ print_dataset(zfs_handle_t *zhp, list_cbdata_t *cb)
 			(void) printf("%*s", pl->pl_width, propstr);
 		else
 			(void) printf("%-*s", pl->pl_width, propstr);
+
+	}
+
+	if (cb->cb_json) {
+		(void) nvlist_print_json(cb->cb_json, props);
+		nvlist_free(props);
+		return;
 	}
 
 	(void) printf("\n");
@@ -2994,6 +3069,15 @@ static int
 list_callback(zfs_handle_t *zhp, void *data)
 {
 	list_cbdata_t *cbp = data;
+
+	if (cbp->cb_json) {
+		const char *delim = cbp->cb_first ? "[\n  " : ",\n  ";
+		(void) fprintf(cbp->cb_json, "%s", delim);
+		cbp->cb_first = B_FALSE;
+		print_dataset(zhp, cbp);
+		return (0);
+	}
+
 
 	if (cbp->cb_first) {
 		if (!cbp->cb_scripted)
@@ -3023,8 +3107,11 @@ zfs_do_list(int argc, char **argv)
 	int flags = ZFS_ITER_PROP_LISTSNAPS | ZFS_ITER_ARGS_CAN_BE_PATHS;
 
 	/* check options */
-	while ((c = getopt(argc, argv, "HS:d:o:prs:t:")) != -1) {
+	while ((c = getopt(argc, argv, "HS:d:o:prs:t:j")) != -1) {
 		switch (c) {
+		case 'j':
+			cb.cb_json = stdout;
+			break;
 		case 'o':
 			fields = optarg;
 			break;
@@ -3133,6 +3220,11 @@ zfs_do_list(int argc, char **argv)
 
 	zprop_free_list(cb.cb_proplist);
 	zfs_free_sort_columns(sortcol);
+
+	if (cb.cb_json) {
+		print_json_array_end(&cb);
+		return (ret);
+	}
 
 	if (ret == 0 && cb.cb_first && !cb.cb_scripted)
 		(void) printf(gettext("no datasets available\n"));

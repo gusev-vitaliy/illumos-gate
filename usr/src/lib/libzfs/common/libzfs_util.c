@@ -964,7 +964,7 @@ zprop_print_headers(zprop_get_cbdata_t *cbp, zfs_type_t type)
 void
 zprop_print_one_property(const char *name, zprop_get_cbdata_t *cbp,
     const char *propname, const char *value, zprop_source_t sourcetype,
-    const char *source, const char *recvd_value)
+    const char *source, const char *recvd_value, nvlist_t *props)
 {
 	int i;
 	const char *str;
@@ -975,6 +975,11 @@ zprop_print_one_property(const char *name, zprop_get_cbdata_t *cbp,
 	 */
 	if ((sourcetype & cbp->cb_sources) == 0)
 		return;
+
+	if (props != NULL) {
+		fnvlist_add_string(props, propname, value);
+		return;
+	}
 
 	if (cbp->cb_first)
 		zprop_print_headers(cbp, cbp->cb_type);

@@ -518,11 +518,12 @@ typedef struct zprop_get_cbdata {
 	boolean_t cb_first;
 	zprop_list_t *cb_proplist;
 	zfs_type_t cb_type;
+	FILE      *cb_json;
 } zprop_get_cbdata_t;
 
 void zprop_print_one_property(const char *, zprop_get_cbdata_t *,
     const char *, const char *, zprop_source_t, const char *,
-    const char *);
+    const char *, nvlist_t *);
 
 /*
  * Iterator functions.

@@ -101,7 +101,7 @@ zfs \- configures ZFS file systems
 
 .LP
 .nf
-\fBzfs\fR \fBlist\fR [\fB-r\fR|\fB-d\fR \fIdepth\fR][\fB-Hp\fR][\fB-o\fR \fIproperty\fR[,\fIproperty\fR]...] [\fB-t\fR \fItype\fR[,\fItype\fR]...]
+\fBzfs\fR \fBlist\fR [\fB-r\fR|\fB-d\fR \fIdepth\fR][\fB-Hpj\fR][\fB-o\fR \fIproperty\fR[,\fIproperty\fR]...] [\fB-t\fR \fItype\fR[,\fItype\fR]...]
      [\fB-s\fR \fIproperty\fR]... [\fB-S\fR \fIproperty\fR]... [\fIfilesystem\fR|\fIvolume\fR|\fIsnapshot\fR]...
 .fi
 
@@ -112,7 +112,7 @@ zfs \- configures ZFS file systems
 
 .LP
 .nf
-\fBzfs\fR \fBget\fR [\fB-r\fR|\fB-d\fR \fIdepth\fR][\fB-Hp\fR][\fB-o\fR \fIfield\fR[,\fIfield\fR]...] [\fB-t\fR \fItype\fR[,\fItype\fR]...]
+\fBzfs\fR \fBget\fR [\fB-r\fR|\fB-d\fR \fIdepth\fR][\fB-Hpj\fR][\fB-o\fR \fIfield\fR[,\fIfield\fR]...] [\fB-t\fR \fItype\fR[,\fItype\fR]...]
     [\fB-s\fR \fIsource\fR[,\fIsource\fR]...] \fBall\fR | \fIproperty\fR[,\fIproperty\fR]...
     \fIfilesystem\fR|\fIvolume\fR|\fIsnapshot\fR...
 .fi
@@ -2234,7 +2234,7 @@ only dataset that can be renamed recursively.
 .sp
 .ne 2
 .na
-\fB\fBzfs\fR \fBlist\fR [\fB-r\fR|\fB-d\fR \fIdepth\fR] [\fB-Hp\fR] [\fB-o\fR
+\fB\fBzfs\fR \fBlist\fR [\fB-r\fR|\fB-d\fR \fIdepth\fR] [\fB-Hpj\fR] [\fB-o\fR
 \fIproperty\fR[,\fIproperty\fR]...] [ \fB-t\fR \fItype\fR[,\fItype\fR]...] [ \fB-s\fR
 \fIproperty\fR ]... [ \fB-S\fR \fIproperty\fR ]...
 [\fIfilesystem\fR|\fIvolume\fR|\fIsnapshot\fR]...\fR
@@ -2256,6 +2256,16 @@ default is \fBoff\fR) . The following fields are displayed,
 .RS 4n
 Used for scripting mode. Do not print headers and separate fields by a single
 tab instead of arbitrary white space.
+.RE
+
+.sp
+.ne 2
+.na
+\fB\fB-j\fR\fR
+.ad
+.sp .6
+.RS 4n
+Display properties in JSON format.
 .RE
 
 .sp
@@ -2415,7 +2425,7 @@ information, see the "User Properties" section.
 .sp
 .ne 2
 .na
-\fB\fBzfs get\fR [\fB-r\fR|\fB-d\fR \fIdepth\fR] [\fB-Hp\fR] [\fB-o\fR
+\fB\fBzfs get\fR [\fB-r\fR|\fB-d\fR \fIdepth\fR] [\fB-Hpj\fR] [\fB-o\fR
 \fIfield\fR[,\fIfield\fR]... [\fB-t\fR \fItype\fR[,\fItype\fR]...] [\fB-s\fR \fIsource\fR[,\fIsource\fR]... \fBall\fR |
 \fIproperty\fR[,\fIproperty\fR]... \fIfilesystem\fR|\fIvolume\fR|\fIsnapshot\fR...\fR
 .ad
@@ -2450,6 +2460,16 @@ the given dataset's type (filesystem, volume, snapshot, or bookmark).
 .sp .6
 .RS 4n
 Recursively display properties for any children.
+.RE
+
+.sp
+.ne 2
+.na
+\fB\fB-j\fR\fR
+.ad
+.sp .6
+.RS 4n
+Display properties in JSON format.
 .RE
 
 .sp
