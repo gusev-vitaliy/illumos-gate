@@ -1566,7 +1566,7 @@ print_vdev_tree(libzfs_handle_t *hdl, const char *name, nvlist_t *nv,
 }
 
 void
-zpool_print_unsup_feat(nvlist_t *config)
+zpool_print_unsup_feat(nvlist_t *config, nvlist_t *to)
 {
 	nvlist_t *nvinfo, *unsup_feat;
 
@@ -1574,6 +1574,9 @@ zpool_print_unsup_feat(nvlist_t *config)
 	    0);
 	verify(nvlist_lookup_nvlist(nvinfo, ZPOOL_CONFIG_UNSUP_FEAT,
 	    &unsup_feat) == 0);
+
+	if (to)
+		fnvlist_add_nvlist(to, "unsup_features", unsup_feat);
 
 	for (nvpair_t *nvp = nvlist_next_nvpair(unsup_feat, NULL); nvp != NULL;
 	    nvp = nvlist_next_nvpair(unsup_feat, nvp)) {
@@ -1705,7 +1708,7 @@ zpool_import_props(libzfs_handle_t *hdl, nvlist_t *config, const char *newname,
 				(void) printf(dgettext(TEXT_DOMAIN, "This "
 				    "pool uses the following feature(s) not "
 				    "supported by this system:\n"));
-				zpool_print_unsup_feat(nv);
+				zpool_print_unsup_feat(nv, NULL);
 				if (nvlist_exists(nvinfo,
 				    ZPOOL_CONFIG_CAN_RDONLY)) {
 					(void) printf(dgettext(TEXT_DOMAIN,

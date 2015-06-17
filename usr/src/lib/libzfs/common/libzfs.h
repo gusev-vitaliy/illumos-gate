@@ -352,7 +352,7 @@ extern int zpool_import(libzfs_handle_t *, nvlist_t *, const char *,
     char *altroot);
 extern int zpool_import_props(libzfs_handle_t *, nvlist_t *, const char *,
     nvlist_t *, int);
-extern void zpool_print_unsup_feat(nvlist_t *config);
+extern void zpool_print_unsup_feat(nvlist_t *config, nvlist_t *to);
 
 /*
  * Search for pools to import

@@ -61,7 +61,7 @@ zpool \- configures ZFS storage pools
 
 .LP
 .nf
-\fBzpool get\fR [\fB-Hp\fR] [\fB-o \fR\fIfield\fR[,...]] "\fIall\fR" | \fIproperty\fR[,...] \fIpool\fR ...
+\fBzpool get\fR [\fB-Hpj\fR] [\fB-o \fR\fIfield\fR[,...]] "\fIall\fR" | \fIproperty\fR[,...] \fIpool\fR ...
 .fi
 
 .LP
@@ -93,7 +93,7 @@ zpool \- configures ZFS storage pools
 
 .LP
 .nf
-\fBzpool list\fR [\fB-T\fR \fBu\fR | \fBd\fR ] [\fB-Hpv\fR] [\fB-o\fR \fIproperty\fR[,...]] [\fIpool\fR] ... [\fIinterval\fR[\fIcount\fR]]
+\fBzpool list\fR [\fB-T\fR \fBu\fR | \fBd\fR ] [\fB-Hpvj\fR] [\fB-o\fR \fIproperty\fR[,...]] [\fIpool\fR] ... [\fIinterval\fR[\fIcount\fR]]
 .fi
 
 .LP
@@ -138,7 +138,7 @@ zpool \- configures ZFS storage pools
 
 .LP
 .nf
-\fBzpool status\fR [\fB-xvD\fR] [\fB-T\fR \fBu\fR | \fBd\fR ] [\fIpool\fR] ... [\fIinterval\fR [\fIcount\fR]]
+\fBzpool status\fR [\fB-xvDj\fR] [\fB-T\fR \fBu\fR | \fBd\fR ] [\fIpool\fR] ... [\fIinterval\fR [\fIcount\fR]]
 .fi
 
 .LP
@@ -1160,7 +1160,7 @@ is currently being used. This may lead to potential data corruption.
 .sp
 .ne 2
 .na
-\fB\fBzpool get\fR [\fB-Hp\fR] [\fB-o \fR\fIfield\fR[,...]]  "\fIall\fR" | \fIproperty\fR[,...]
+\fB\fBzpool get\fR [\fB-Hpj\fR] [\fB-o \fR\fIfield\fR[,...]]  "\fIall\fR" | \fIproperty\fR[,...]
 \fIpool\fR ...\fR
 .ad
 .sp .6
@@ -1181,6 +1181,16 @@ the following fields:
 
 See the "Properties" section for more information on the available pool
 properties.
+
+.sp
+.ne 2
+.na
+\fB\fB-j\fR\fR
+.ad
+.sp .6
+.RS 4n
+Display properties in JSON format.
+.RE
 
 .sp
 .ne 2
@@ -1608,7 +1618,7 @@ the pool, in addition to the pool-wide statistics.
 .sp
 .ne 2
 .na
-\fB\fBzpool list\fR [\fB-T\fR \fBu\fR | \fBd\fR] [\fB-Hv\fR] [\fB-o\fR \fIprops\fR[,...]] [\fIpool\fR] ...
+\fB\fBzpool list\fR [\fB-T\fR \fBu\fR | \fBd\fR] [\fB-Hvj\fR] [\fB-o\fR \fIprops\fR[,...]] [\fIpool\fR] ...
 [\fIinterval\fR[\fIcount\fR]]\fR
 .ad
 .sp .6
@@ -1628,6 +1638,16 @@ Display a time stamp.
 Specify \fBu\fR for a printed representation of the internal representation of
 time. See \fBtime\fR(2). Specify \fBd\fR for standard date format. See
 \fBdate\fR(1).
+.RE
+
+.sp
+.ne 2
+.na
+\fB\fB-j\fR\fR
+.ad
+.sp .6
+.RS 4n
+Display properties in JSON format.
 .RE
 
 .sp
@@ -1835,7 +1855,7 @@ more information on what properties can be set and acceptable values.
 .sp
 .ne 2
 .na
-\fBzpool status\fR [\fB-xvD\fR] [\fB-T\fR \fBu\fR | \fBd\fR ] [\fIpool\fR] ... [\fIinterval\fR [\fIcount\fR]]
+\fBzpool status\fR [\fB-xvDj\fR] [\fB-T\fR \fBu\fR | \fBd\fR ] [\fIpool\fR] ... [\fIinterval\fR [\fIcount\fR]]
 .ad
 .sp .6
 .RS 4n
@@ -1857,6 +1877,16 @@ can change.
 Only display status for pools that are exhibiting errors or are otherwise
 unavailable. Warnings about pools not using the latest on-disk format will
 not be included.
+.RE
+
+.sp
+.ne 2
+.na
+\fB\fB-j\fR\fR
+.ad
+.sp .6
+.RS 4n
+Display properties in JSON format.
 .RE
 
 .sp
